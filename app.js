@@ -673,7 +673,7 @@ function setDefaultDates() {
   const today = new Date();
   const end = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
   els.startDate.value = "2023-04-01";
-  els.endDate.value = end.toISOString().slice(0, 10);
+  els.endDate.value = "2025-05-31";
   els.endDate.max = end.toISOString().slice(0, 10);
 }
 

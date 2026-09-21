@@ -214,6 +214,9 @@ input[type="date"] { min-width: 0; width: 100%; padding: 0; color: var(--blue-da
 input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0; width: 0; }
 .date-separator { color: var(--blue-dark); font-weight: 750; }
 .field-error { min-height: 1em; margin: 6px 0 -9px; color: #c92f45; font-size: .84rem; }
+.date-disclaimer { margin: 10px 0 0; color: var(--blue-dark); font-size: .94rem; line-height: 1.4; }
+.date-disclaimer a { color: var(--blue); text-decoration: underline; text-underline-offset: 2px; }
+.date-disclaimer a:hover { color: var(--blue-dark); }
 
 .radio-option { display: inline-flex; align-items: center; gap: 9px; color: var(--blue-dark); cursor: pointer; font-size: 1rem; }
 .radio-option input { position: absolute; opacity: 0; pointer-events: none; }
