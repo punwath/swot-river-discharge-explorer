@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Explore North American SWORD river reaches and SWOT river discharge products." />
+    <meta name="theme-color" content="#073b68" />
+    <title>SWOT River Discharge Explorer — North America</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%23073864'/%3E%3Cpath d='M8 18c8 0 10-8 18-8s10 8 18 8 10-8 12-8v10c-5 0-7 8-15 8s-10-8-18-8-10 8-15 8zm0 18c8 0 10-8 18-8s10 8 18 8 10-8 12-8v10c-5 0-7 8-15 8s-10-8-18-8-10 8-15 8z' fill='%230db8f2'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#explore" aria-label="SWOT River Discharge Explorer home">
+        <svg class="brand-logo" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M4 18c10 0 13-10 23-10s13 10 23 10 9-6 14-9v13c-6 4-10 9-18 9-10 0-13-10-23-10S10 31 4 31z" />
+          <path d="M4 38c10 0 13-10 23-10s13 10 23 10 9-6 14-9v13c-6 4-10 9-18 9-10 0-13-10-23-10S10 51 4 51z" />
+        </svg>
+        <span><strong>SWOT River Discharge Explorer</strong><small>North American River Discharge from Space</small></span>
+      </a>
+      <nav class="main-nav" aria-label="Primary navigation">
+        <a class="active" href="#explore">Explore</a>
+        <button type="button" data-dialog="methods-dialog">Data &amp; Methods</button>
+      </nav>
+    </header>
+
+    <main id="explore" class="explorer-page">
+      <section class="map-panel" aria-label="Map of North American river reaches">
+        <div id="map"></div>
+        <div class="map-loading" id="map-loading" role="status"><span class="spinner" aria-hidden="true"></span>Loading North American river reaches</div>
+        <div class="width-legend" aria-label="River width color legend">
+          <div class="legend-title"><strong>River width</strong><span>metres</span></div>
+          <div class="legend-classes" aria-hidden="true">
+            <span><i class="legend-swatch width-1"></i>&lt; 50</span>
+            <span><i class="legend-swatch width-2"></i>50–150</span>
+            <span><i class="legend-swatch width-3"></i>150–500</span>
+            <span><i class="legend-swatch width-4"></i>500–1,500</span>
+            <span><i class="legend-swatch width-5"></i>&gt; 1,500</span>
+          </div>
+        </div>
+        <div class="map-tooltip" id="map-tooltip" hidden></div>
+        <aside class="panel settings-panel map-settings-overlay">
+          <details class="settings-details" open>
+            <summary>
+              <span class="summary-title">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16M8 3v6m8 0v6m-5 0v6" /></svg>
+                Map &amp; Data Settings
+              </span>
+              <svg class="chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m5 12 5-5 5 5" /></svg>
+            </summary>
+            <form id="settings-form">
+              <fieldset class="field-group">
+                <legend>Date Range</legend>
+                <div class="date-row">
+                  <label>
+                    <span class="sr-only">Start date</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" /></svg>
+                    <input id="start-date" name="start-date" type="date" min="2023-01-01" />
+                  </label>
+                  <span class="date-separator">–</span>
+                  <label>
+                    <span class="sr-only">End date</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" /></svg>
+                    <input id="end-date" name="end-date" type="date" min="2023-01-01" />
+                  </label>
+                </div>
+                <p class="field-error" id="date-error" role="alert"></p>
+              </fieldset>
+              <fieldset class="field-group">
+                <legend>Map Style</legend>
+                <div class="map-style-row" role="radiogroup" aria-label="Map style">
+                  <label class="radio-option"><input type="radio" name="map-style" value="satellite" checked /><span class="radio-dot"></span>Satellite</label>
+                  <label class="radio-option"><input type="radio" name="map-style" value="terrain" /><span class="radio-dot"></span>Terrain</label>
+                  <label class="radio-option"><input type="radio" name="map-style" value="light" /><span class="radio-dot"></span>Light</label>
+                </div>
+              </fieldset>
+              <button class="reset-button" id="reset-map" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a8 8 0 1 1 2.34 5.66M4 11V5m0 6h6" /></svg>Reset Map
+              </button>
+              <p class="network-count"><span id="reach-count">Loading river network…</span></p>
+            </form>
+          </details>
+        </aside>
+      </section>
+
+      <section class="workspace-grid" aria-label="Selected river reach">
+        <section class="panel selected-panel">
+          <header class="selected-header">
+            <h2>Selected Reach</h2>
+            <p><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 10v7m0-10v.01" /></svg>Zoom and click on a river reach in the map to see details.</p>
+          </header>
+          <div id="reach-empty" class="empty-state">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 13c8 0 10-7 18-7s10 7 18 7M5 24c8 0 10-7 18-7s10 7 18 7M5 35c8 0 10-7 18-7s10 7 18 7" /></svg>
+            <div><h3>Select a river reach</h3><p>Click any colored river line to load its attributes and all seven SoS discharge products.</p></div>
+          </div>
+          <div id="reach-details" class="reach-details" hidden>
+            <div class="summary-row">
+              <article class="reach-summary-card">
+                <div class="river-title">
+                  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 8c5 0 6-5 11-5s6 5 11 5 4-3 5-4M3 16c5 0 6-5 11-5s6 5 11 5 4-3 5-4M3 24c5 0 6-5 11-5s6 5 11 5 4-3 5-4" /></svg>
+                  <h3 id="river-name">—</h3><span class="width-chip" id="width-chip">—</span>
+                </div>
+                <dl class="reach-facts">
+                  <div><dt>Reach ID:</dt><dd id="reach-id">—</dd></div>
+                  <div class="wse-fact"><dt>Reference water surface elevation:</dt><dd id="reach-wse">—</dd></div>
+                  <div><dt>River width:</dt><dd id="reach-width">—</dd></div>
+                  <div><dt>Reach slope:</dt><dd id="reach-slope">—</dd></div>
+                  <div><dt>Distance to outlet:</dt><dd id="reach-distance">—</dd></div>
+                  <div><dt>Selected period:</dt><dd id="selected-period">—</dd></div>
+                </dl>
+                <p class="reach-message" id="reach-message" aria-live="polite"></p>
+                <section class="algorithm-guide" aria-labelledby="algorithm-guide-title">
+                  <h4 id="algorithm-guide-title">Discharge algorithms</h4>
+                  <dl>
+                    <div><dt><i style="--series-color:#087bf1"></i>Consensus</dt><dd>Consensus discharge, combining the individual algorithms</dd></div>
+                    <div><dt><i style="--series-color:#8b5cf6"></i>HiVDI</dt><dd>Hierarchical Variational Discharge Inversion</dd></div>
+                    <div><dt><i style="--series-color:#ef4444"></i>MetroMan</dt><dd>Metropolis Manning algorithm</dd></div>
+                    <div><dt><i style="--series-color:#ec4899"></i>MOMMA</dt><dd>Mean Observed Manning’s Metropolis Algorithm</dd></div>
+                    <div><dt><i style="--series-color:#f59e0b"></i>SAD</dt><dd>Slope-Area Discharge</dd></div>
+                    <div><dt><i style="--series-color:#10a878"></i>SIC4DVar</dt><dd>Système Intégré de Calcul 4D Variational</dd></div>
+                    <div><dt><i style="--series-color:#06b6d4"></i>LakeFlow</dt><dd>Discharge derived from connected lake storage change</dd></div>
+                  </dl>
+                </section>
+              </article>
+              <div class="stats-grid" aria-label="Discharge statistics">
+                <div class="stat"><span>Min Discharge<br />(m³/s)</span><strong id="stat-min">—</strong></div>
+                <div class="stat"><span>Max Discharge<br />(m³/s)</span><strong id="stat-max">—</strong></div>
+                <div class="stat"><span>Median Discharge<br />(m³/s)</span><strong id="stat-median">—</strong></div>
+                <div class="stat"><span>Std. Dev.<br />(m³/s)</span><strong id="stat-std">—</strong></div>
+              </div>
+            </div>
+            <section class="chart-section">
+              <div class="chart-heading">
+                <h3>River Discharge <span>(Selected Period)</span></h3>
+                <p id="chart-subtitle">Select a reach to view observations.</p>
+                <button class="download-button chart-download" id="download-button" type="button" disabled>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 18v2h14v-2" /></svg>
+                  Download
+                </button>
+                <div class="chart-status" id="chart-status" aria-live="polite"></div>
+                <div class="chart-legend" aria-label="Discharge series legend">
+                  <span class="consensus-key"><i style="--series-color:#087bf1"></i>Consensus</span>
+                  <span><i style="--series-color:#8b5cf6"></i>HiVDI</span>
+                  <span><i style="--series-color:#ef4444"></i>MetroMan</span>
+                  <span><i style="--series-color:#ec4899"></i>MOMMA</span>
+                  <span><i style="--series-color:#f59e0b"></i>SAD</span>
+                  <span><i style="--series-color:#10a878"></i>SIC4DVar</span>
+                  <span><i style="--series-color:#06b6d4"></i>LakeFlow</span>
+                </div>
+              </div>
+              <div class="chart-wrap" id="chart-wrap">
+                <div class="chart-empty" id="chart-empty"><svg viewBox="0 0 160 70" aria-hidden="true"><path d="M3 59 29 44l24 7 25-31 27 16 24-23 28 6" /></svg><p>Discharge series will appear here.</p></div>
+                <div class="chart-tooltip" id="chart-tooltip" hidden></div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer>SWOT River Discharge Explorer (North America) | Designed by <a href="https://scholar.google.com/citations?user=h0Q203sAAAAJ&amp;hl=en" target="_blank" rel="noopener noreferrer">Punwath</a> from <a href="https://gardnerlab.weebly.com/" target="_blank" rel="noopener noreferrer">Gardner Lab</a></footer>
+    <dialog id="methods-dialog" class="info-dialog"><button class="dialog-close" type="button" aria-label="Close">×</button><h2>Data &amp; Methods</h2><p>The map displays North American SWORD v17c river reaches (<a href="https://zenodo.org/records/22259077" target="_blank" rel="noopener noreferrer">data source</a>). The river reaches was simplified for visualization. We use the SWORD v16–v17 reach ID crosswalk to request discharge data from <a href="https://podaac.github.io/hydrocron/" target="_blank" rel="noopener noreferrer">Hydrocron</a>.</p></dialog>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
